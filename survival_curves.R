@@ -2,6 +2,8 @@
 # setwd() # set the working directory
 
 ## load packages
+library(survival)
+library(survminer)
 library(car) # logit transforming percentage data
 library(GGally) # data exploration
 library(dplyr) # select function
