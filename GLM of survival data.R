@@ -16,7 +16,12 @@ therm_surv_LF$repf <- as.factor(therm_surv_LF$rep)
 therm_surv_LF$runf <- as.factor(therm_surv_LF$run)
 
 ## Quick & dirty GLM
-ggplot(therm_surv_LF, aes(temp, surv_perc, col = motuf)) +
+ggplot(therm_surv_LF, aes(temp, surv_perc, col = motu)) +
+  geom_point() +
+  geom_smooth(method = "glm", se = T,
+              method.args = list(family = "quasibinomial"), linetype = "dashed")
+
+ggplot(therm_surv_LF, aes(temp, death_perc, col = motu)) +
   geom_point() +
   geom_smooth(method = "glm", se = T,
               method.args = list(family = "quasibinomial"), linetype = "dashed")
