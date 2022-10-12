@@ -3,6 +3,7 @@
 
 ## Load require packages
 library(ggplot2)
+library(gridExtra)
 
 ## load data
 therm_surv_LF <- read.csv("Survival_own_data.csv", header = T, sep = ",", row.names = c(1) ,stringsAsFactors = FALSE)
@@ -159,15 +160,16 @@ p2
 # compare models
 anova(GLM_bi1, GLM_bi4, test = "Chi") # fuller model is better than model with just temp
 
-## Combine the two plots
+## Create aestically pleasing plots
 p3 <- ggplot(therm_surv_LF, aes(temp, surv)) + 
+  theme_bw() +
   # Add reference lines
   # geom_vline(xintercept = c(25, 28, 31), linetype = "dashed", color = "gray50", size = 0.5) +
   # geom_hline(yintercept = c(0.5), linetype = "dashed", color = "gray50", size = 0.5) +
   geom_segment(x = 21, y = 0.5, xend = 31.25, yend = 0.5, color = "#464646", linetype = "dashed") +
-  geom_segment(x = 30.25, y = 0.5, xend = 30.25, yend = 0, color = "#464646", linetype = "dashed") + # motu L
+  geom_segment(x = 30.24, y = 0.5, xend = 30.24, yend = 0, color = "#464646", linetype = "dashed") + # motu L
   geom_segment(x = 31, y = 0.5, xend = 31, yend = 0, color = "#AB82FF", linetype = "dashed") + # motu A
-  geom_segment(x = 31.25, y = 0.5, xend = 31.25, yend = 0, color = "#9ACD32", linetype = "dashed") + # motu G
+  geom_segment(x = 31.26, y = 0.5, xend = 31.26, yend = 0, color = "#9ACD32", linetype = "dashed") + # motu G
   # add smoothers
   geom_smooth(data = therm_surv_LF, aes(temp, surv, col = motuf, fill = motuf), method = "glm", se = T,
               method.args = list(family = "binomial"(link = "logit")), linetype = "dashed") + 
@@ -176,13 +178,12 @@ p3 <- ggplot(therm_surv_LF, aes(temp, surv)) +
 coord_cartesian(xlim = c(22, 34)) +
   scale_fill_manual(values = c("#AB82FF", "#9ACD32", "#464646")) +
   scale_color_manual(values = c("#AB82FF", "#9ACD32", "#464646")) +
-  theme(legend.position = "right") + 
-  theme_bw() +
+  theme(legend.position = "bottom") + 
   # update figure labels/titles
   labs(
     y = "Percentage Survival",
     x = "Temperature in degrees Celcius",
-    title = "Survival curve - GLM"
+    title = "Survival curve (GLM) - Split MOTUs"
   ) +
   # reduce padding on edges of figure and format axes
   scale_y_continuous(label = scales::percent, 
@@ -191,3 +192,32 @@ coord_cartesian(xlim = c(22, 34)) +
   scale_x_continuous(breaks = seq(22, 34, by = 1), 
                      expand = c(0.04, 0))
 p3
+
+p4 <- ggplot(therm_surv_LF, aes(temp, surv)) + 
+  theme_bw() +
+  # Add reference lines
+  geom_segment(x = 21, y = 0.5, xend = 30.83, yend = 0.5, color = "black", linetype = "dashed") +
+  geom_segment(x = 30.83, y = 0.5, xend = 30.83, yend = 0, color = "black", linetype = "dashed") + # motu L
+  # add smoothers
+  geom_smooth(data = therm_surv_LF, aes(temp, surv, col = "All MOTUs"), method = "glm", se = T,
+              method.args = list(family = "binomial"(link = "logit")), linetype = "dashed") +
+  coord_cartesian(xlim = c(22, 34)) +
+  scale_fill_manual(values = c("black")) +
+  scale_color_manual(values =  c("black")) +
+  theme(legend.position = "bottom") + 
+  # update figure labels/titles
+  labs(
+    y = "Percentage Survival",
+    x = "Temperature in degrees Celcius",
+    title = "Survival curve (GLM) - All MOTUs"
+  ) +
+  # reduce padding on edges of figure and format axes
+  scale_y_continuous(label = scales::percent, 
+                     breaks = seq(0, 1, by = 0.1),
+                     expand = c(0.02, 0)) +
+  scale_x_continuous(breaks = seq(22, 34, by = 1), 
+                     expand = c(0.04, 0))
+p4
+
+## join the two plots
+grid.arrange(p4, p3, nrow = 1)
