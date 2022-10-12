@@ -63,11 +63,13 @@ predicted.probability <- predict(GLM_bi1, + newtemp, type = "resp")
 plot(predicted.probability ~ temp1, type = "l")
 
 # ggplot
-ggplot(therm_surv_LF, aes(temp, surv)) +
+p1 <- ggplot(therm_surv_LF, aes(temp, surv, col = "All MOTUs")) +
   #geom_point(aes(col = motu)) +
   geom_smooth(method = "glm", se = T,
               method.args = list(family = "binomial"(link = "logit")), linetype = "dashed") +
   coord_cartesian(xlim = c(22, 34)) +
+  scale_color_manual(values = "black") +
+  theme(legend.position = "none") + 
   # update figure labels/titles
   labs(
     y = "Percentage Survival",
@@ -80,6 +82,7 @@ ggplot(therm_surv_LF, aes(temp, surv)) +
                      expand = c(0.02, 0)) +
   scale_x_continuous(breaks = seq(22, 34, by = 3), 
                      expand = c(0.04, 0))
+p1
 
 ## GLM with binomial distribution - temp + motu
 GLM_bi4 <- glm(surv ~ temp + motuf, data = therm_surv_LF, family = "binomial"(link = "logit")) # assumes ~ equal number of 1s and 0s
@@ -133,11 +136,12 @@ exp(cbind(OR = coef(GLM_bi4), confint(GLM_bi4)))
 # log-log model should have a lower deviance statistic than that of other links.
 
 # motuf with standard error
-ggplot(therm_surv_LF, aes(temp, surv, col = motuf)) +
-  #geom_point(aes(col = motu)) +
+p2 <- ggplot(therm_surv_LF, aes(temp, surv, col = motuf)) +
   geom_smooth(method = "glm", se = T,
               method.args = list(family = "binomial"(link = "logit")), linetype = "dashed") +
   coord_cartesian(xlim = c(22, 34)) +
+  scale_color_manual(values = c("red", "green", "blue")) +
+  theme(legend.position = "none") + 
   # update figure labels/titles
   labs(
     y = "Percentage Survival",
@@ -150,7 +154,40 @@ ggplot(therm_surv_LF, aes(temp, surv, col = motuf)) +
                      expand = c(0.02, 0)) +
   scale_x_continuous(breaks = seq(22, 34, by = 3), 
                      expand = c(0.04, 0))
+p2
 
 # compare models
 anova(GLM_bi1, GLM_bi4, test = "Chi") # fuller model is better than model with just temp
 
+## Combine the two plots
+p3 <- ggplot(therm_surv_LF, aes(temp, surv)) + 
+  # Add reference lines
+  # geom_vline(xintercept = c(25, 28, 31), linetype = "dashed", color = "gray50", size = 0.5) +
+  # geom_hline(yintercept = c(0.5), linetype = "dashed", color = "gray50", size = 0.5) +
+  geom_segment(x = 21, y = 0.5, xend = 31.25, yend = 0.5, color = "#464646", linetype = "dashed") +
+  geom_segment(x = 30.25, y = 0.5, xend = 30.25, yend = 0, color = "#464646", linetype = "dashed") + # motu L
+  geom_segment(x = 31, y = 0.5, xend = 31, yend = 0, color = "#AB82FF", linetype = "dashed") + # motu A
+  geom_segment(x = 31.25, y = 0.5, xend = 31.25, yend = 0, color = "#9ACD32", linetype = "dashed") + # motu G
+  # add smoothers
+  geom_smooth(data = therm_surv_LF, aes(temp, surv, col = motuf, fill = motuf), method = "glm", se = T,
+              method.args = list(family = "binomial"(link = "logit")), linetype = "dashed") + 
+  # geom_smooth(data = therm_surv_LF, aes(temp, surv, col = "All MOTUs"), method = "glm", se = T,
+  #             method.args = list(family = "binomial"(link = "logit")), linetype = "dashed", col = "black") +
+coord_cartesian(xlim = c(22, 34)) +
+  scale_fill_manual(values = c("#AB82FF", "#9ACD32", "#464646")) +
+  scale_color_manual(values = c("#AB82FF", "#9ACD32", "#464646")) +
+  theme(legend.position = "right") + 
+  theme_bw() +
+  # update figure labels/titles
+  labs(
+    y = "Percentage Survival",
+    x = "Temperature in degrees Celcius",
+    title = "Survival curve - GLM"
+  ) +
+  # reduce padding on edges of figure and format axes
+  scale_y_continuous(label = scales::percent, 
+                     breaks = seq(0, 1, by = 0.1),
+                     expand = c(0.02, 0)) +
+  scale_x_continuous(breaks = seq(22, 34, by = 1), 
+                     expand = c(0.04, 0))
+p3
