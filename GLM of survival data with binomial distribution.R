@@ -4,12 +4,16 @@
 ## Load require packages
 library(ggplot2)
 library(gridExtra)
+library(grid)
+library(gridtext)
+library(tidyverse)
 
 ## load data
 therm_surv_LF <- read.csv("Survival_own_data.csv", header = T, sep = ",", row.names = c(1) ,stringsAsFactors = FALSE)
 therm_surv_LF$popf <- as.factor(therm_surv_LF$pop)
 therm_surv_LF$motuf <- as.factor(therm_surv_LF$motu)
 therm_surv_LF$motu_numf <- as.factor(therm_surv_LF$motu_num)
+therm_surv_LF$motusf <- as.factor(therm_surv_LF$motus)
 therm_surv_LF$repf <- as.factor(therm_surv_LF$rep)
 therm_surv_LF$runf <- as.factor(therm_surv_LF$run)
 
@@ -166,28 +170,35 @@ p3 <- ggplot(therm_surv_LF, aes(temp, surv)) +
   # Add reference lines
   # geom_vline(xintercept = c(25, 28, 31), linetype = "dashed", color = "gray50", size = 0.5) +
   # geom_hline(yintercept = c(0.5), linetype = "dashed", color = "gray50", size = 0.5) +
-  geom_segment(x = 21, y = 0.5, xend = 31.25, yend = 0.5, color = "#464646", linetype = "dashed") +
-  geom_segment(x = 30.24, y = 0.5, xend = 30.24, yend = 0, color = "#464646", linetype = "dashed") + # motu L
-  geom_segment(x = 31, y = 0.5, xend = 31, yend = 0, color = "#AB82FF", linetype = "dashed") + # motu A
-  geom_segment(x = 31.26, y = 0.5, xend = 31.26, yend = 0, color = "#9ACD32", linetype = "dashed") + # motu G
+  geom_segment(x = 21, y = 0.5, xend = 30.24, yend = 0.5, color = "#464646", linetype = "dashed") +
+  geom_segment(x = 30.24, y = 0.5, xend = 30.24, yend = -0.5, color = "#464646", linetype = "dashed") + # motu L
+  geom_segment(x = 30.24, y = 0.5, xend = 31, yend = 0.5, color = "#AB82FF", linetype = "dashed") +
+  geom_segment(x = 31, y = 0.5, xend = 31, yend = -0.5, color = "#AB82FF", linetype = "dashed") + # motu A
+  geom_segment(x = 31, y = 0.5, xend = 31.25, yend = 0.5, color = "#9ACD32", linetype = "dashed") +
+  geom_segment(x = 31.25, y = 0.5, xend = 31.25, yend = -0.5, color = "#9ACD32", linetype = "dashed") + # motu G
   # add smoothers
   geom_smooth(data = therm_surv_LF, aes(temp, surv, col = motuf, fill = motuf), method = "glm", se = T,
               method.args = list(family = "binomial"(link = "logit")), linetype = "dashed") + 
   # geom_smooth(data = therm_surv_LF, aes(temp, surv, col = "All MOTUs"), method = "glm", se = T,
   #             method.args = list(family = "binomial"(link = "logit")), linetype = "dashed", col = "black") +
-coord_cartesian(xlim = c(22, 34)) +
+  coord_cartesian(xlim = c(22, 34)) +
+  coord_cartesian(ylim = c(0, 1)) +
   scale_fill_manual(values = c("#AB82FF", "#9ACD32", "#464646")) +
   scale_color_manual(values = c("#AB82FF", "#9ACD32", "#464646")) +
   theme(legend.position = "bottom") + 
+  # add text at LC50
+  geom_label(aes(label = "LT50 at 30.24\u00B0C"), x = 30.24, y = 0.48, colour = "#464646", fontface = "bold", size = 3) +
+  geom_label(aes(label = "LT50 at 31\u00B0C"), x = 31, y = 0.52, colour = "#AB82FF", fontface = "bold", size = 3) +
+  geom_label(aes(label = "LT50 at 31.25\u00B0C"), x = 31.25, y = 0.44, colour = "#9ACD32", fontface = "bold", size = 3) +
   # update figure labels/titles
   labs(
-    y = "Percentage Survival",
-    x = "Temperature in degrees Celcius",
+    y = "Probability of Survival (%)",
+    x = "Temperature (\u00B0C)",
     title = "Survival curve (GLM) - Split MOTUs"
   ) +
   # reduce padding on edges of figure and format axes
   scale_y_continuous(label = scales::percent, 
-                     breaks = seq(0, 1, by = 0.1),
+                     breaks = seq(0, 1, by = 0.05),
                      expand = c(0.02, 0)) +
   scale_x_continuous(breaks = seq(22, 34, by = 1), 
                      expand = c(0.04, 0))
@@ -196,28 +207,61 @@ p3
 p4 <- ggplot(therm_surv_LF, aes(temp, surv)) + 
   theme_bw() +
   # Add reference lines
-  geom_segment(x = 21, y = 0.5, xend = 30.83, yend = 0.5, color = "black", linetype = "dashed") +
-  geom_segment(x = 30.83, y = 0.5, xend = 30.83, yend = 0, color = "black", linetype = "dashed") + # motu L
+  geom_segment(x = 21, y = 0.5, xend = 30.83, yend = 0.5, color = "#b22222", linetype = "dashed") +
+  geom_segment(x = 30.83, y = 0.5, xend = 30.83, yend = -0.5, color = "#b22222", linetype = "dashed") + # motu L
   # add smoothers
-  geom_smooth(data = therm_surv_LF, aes(temp, surv, col = "All MOTUs"), method = "glm", se = T,
+  geom_smooth(data = therm_surv_LF, aes(temp, surv, col = motusf, fill = motusf), method = "glm", se = T,
               method.args = list(family = "binomial"(link = "logit")), linetype = "dashed") +
   coord_cartesian(xlim = c(22, 34)) +
-  scale_fill_manual(values = c("black")) +
-  scale_color_manual(values =  c("black")) +
+  coord_cartesian(ylim = c(0, 1)) +
+  scale_fill_manual(values = c("#b22222")) +
+  scale_color_manual(values =  c("#b22222")) +
   theme(legend.position = "bottom") + 
+  # add text at LC50
+  geom_label(aes(label = "LT50 at 30.83\u00B0C"), x = 30.83, y = 0.52, colour = "#b22222", fontface = "bold", size = 3) +
   # update figure labels/titles
   labs(
-    y = "Percentage Survival",
-    x = "Temperature in degrees Celcius",
+    y = "Probability of Survival (%)",
+    x = "Temperature (\u00B0C)",
     title = "Survival curve (GLM) - All MOTUs"
   ) +
   # reduce padding on edges of figure and format axes
   scale_y_continuous(label = scales::percent, 
-                     breaks = seq(0, 1, by = 0.1),
+                     breaks = seq(0, 1, by = 0.05),
                      expand = c(0.02, 0)) +
   scale_x_continuous(breaks = seq(22, 34, by = 1), 
                      expand = c(0.04, 0))
 p4
 
 ## join the two plots
-grid.arrange(p4, p3, nrow = 1)
+# Remove axis titles from all plots
+p5 = list(p4, p3) %>% map(~.x + labs(x = NULL, y = NULL))
+# create new axis names
+yleft = richtext_grob("Probability of Survival (%)", rot = 90)
+bottom = richtext_grob("Temperature (\u00B0C)")
+# Lay out plots
+grid.arrange(grobs = p5, ncol = 2, nrow = 1, left = yleft, bottom = bottom)
+
+## save plots
+# combined motus glm
+svg(filename = "Combined_motus_glm.svg",
+    width = 7, height = 7, pointsize = 12,
+    onefile = FALSE, family = "sans", bg = "white")
+p4
+dev.off()
+# seperate motus glm
+svg(filename = "Seperate_motus_glm.svg",
+    width = 7, height = 7, pointsize = 12,
+    onefile = FALSE, family = "sans", bg = "white")
+p3
+dev.off()
+# panel plot
+svg(filename = "Panel_motus_glm.svg",
+    width = 14, height = 7, pointsize = 12,
+    onefile = FALSE, family = "sans", bg = "white")
+grid.arrange(grobs = p5, ncol = 2, nrow = 1, left = yleft, bottom = bottom)
+dev.off()
+# updated panel plot
+pdf("Panel_motus_glm.pdf", onefile = T, width = 14, height = 7)
+grid.arrange(grobs = p5, ncol = 2, nrow = 1, left = yleft, bottom = bottom)
+dev.off()
